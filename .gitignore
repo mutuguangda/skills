@@ -3,3 +3,4 @@ node_modules
 board.html
 demo.html
 .DS_Store
+.agents/worktree/

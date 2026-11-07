@@ -26,3 +26,7 @@ Canonical names, unchanged. See `docs/agents/triage-labels.md`.
 ### Domain docs
 
 Single-context: `GLOSSARY.md` at the root and decisions in `docs/adr/`. See `docs/agents/domain.md`.
+
+### Worktrees
+
+Implementation runs in isolated worktrees under `.agents/worktree/`. See `docs/agents/worktree.md`.
