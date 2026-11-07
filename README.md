@@ -27,14 +27,14 @@ idea
   -> to-tickets
   -> implement-spec / implement
   -> code-review
-  -> pr
   -> write-notes-like-deepseek
+  -> pr
   -> retro
 ```
 
 ### 0. 初始化
 
-每个 repo 第一次使用前跑 `setup-workflow`。它在 `docs/agents/` 下写 issue tracker、triage labels 和 domain docs 的配置，后面的 skill 都读这些文件。
+每个 repo 第一次使用前跑 `setup-workflow`。它在 `docs/agents/` 下写 issue tracker、triage labels、domain docs 和 worktrees 的配置，后面的 skill 都读这些文件。
 
 ### 1. 把问题想清楚
 
@@ -50,7 +50,7 @@ idea
 
 ### 3. 实现
 
-整个 spec 用 `implement-spec`。它把 tickets 当任务图，按 frontier 并行派 implementer。
+整个 spec 用 `implement-spec`。它把 tickets 当任务图，按 frontier 并行派 implementer，integration 和 ticket 都在 `.agents/worktree/` 里，主工作区不动。
 
 单个 ticket 或小改动用 `implement`。两者内部都用 `tdd` 做红绿循环，需要讨论模块形状时用 `codebase-design`。
 
@@ -77,7 +77,7 @@ idea
 
 | 阶段 | Skill | 做什么 | 什么时候用 |
 |---|---|---|---|
-| 初始化 | [setup-workflow](./skills/setup-workflow/SKILL.md) | 配置 issue tracker、triage labels 和 domain docs | 每个 repo 第一次使用前 |
+| 初始化 | [setup-workflow](./skills/setup-workflow/SKILL.md) | 配置 issue tracker、triage labels、domain docs 和 worktrees | 每个 repo 第一次使用前 |
 | 想清楚 | [grill-with-docs](./skills/grill-with-docs/SKILL.md) | 访谈式澄清，边问边写 GLOSSARY 和 ADR | 想法还模糊，需要问清楚 |
 | 想清楚 | [grilling](./skills/grilling/SKILL.md) | 访谈原语，一轮轮追问直到问题收敛 | 被其他 skill 调用，也可以单独用 |
 | 想清楚 | [domain-modeling](./skills/domain-modeling/SKILL.md) | 维护领域词汇和 ADR | 术语混乱，或者要做难以回退的决定 |
@@ -87,7 +87,7 @@ idea
 | 想清楚 | [handoff](./skills/handoff/SKILL.md) | 把当前会话压成交接文档 | 上下文要交给另一个 session |
 | 计划 | [to-spec](./skills/to-spec/SKILL.md) | 把讨论收敛成 spec | 方向已经清楚，要写下来 |
 | 计划 | [to-tickets](./skills/to-tickets/SKILL.md) | 拆成带阻塞边的 tracer-bullet tickets | spec 要变成可执行任务 |
-| 实现 | [implement-spec](./skills/implement-spec/SKILL.md) | 按 ticket graph 并行实现整个 spec | 整个 spec 一次做完 |
+| 实现 | [implement-spec](./skills/implement-spec/SKILL.md) | 在 worktree 里按 ticket graph 并行实现整个 spec | 整个 spec 一次做完 |
 | 实现 | [implement](./skills/implement/SKILL.md) | 实现单个 ticket 或小改动 | 只有一个任务，或者想手动逐条做 |
 | 实现 | [tdd](./skills/tdd/SKILL.md) | 红绿重构循环 | 写具体行为时 |
 | 实现 | [codebase-design](./skills/codebase-design/SKILL.md) | 模块、接口、深度、seam 的共享词汇 | 讨论模块形状时 |

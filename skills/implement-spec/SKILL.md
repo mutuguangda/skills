@@ -1,42 +1,33 @@
 ---
 name: implement-spec
-description: "Implement the result of /to-spec and /to-tickets in code."
+description: "Implement a spec through its ticket graph in integration and ticket worktrees."
 disable-model-invocation: true
 ---
 
-You have been provided a spec. This spec should have tickets associated with it, describing how to implement the spec.
+You have a spec with tickets. The issue tracker is the source of truth for the spec, tickets, blocking edges, and completion.
 
-The issue tracker should have been provided to you. If not, tell the user to run `/setup-workflow`.
+Read `docs/agents/issue-tracker.md` and `docs/agents/worktree.md`. If either is missing, tell the user to run `/setup-workflow`.
 
-The goal is the entire spec implemented on a single **integration branch**, with every ticket resolved the way the issue tracker closes work.
+The goal is the whole spec on one **integration branch**. Tickets form a **task graph**; the **frontier** is the open tickets with no open blockers.
 
-The tickets are not a list of steps. They are a **task graph** with blocking relationships between them. This means there is always a **frontier** of tickets which are ready to be grabbed.
-
-Start every subagent with a fresh context window.
-
-Communication to and from subagents should be sparse. Communicate primarily through **context pointers**: to the spec, tickets, research notes, and previous commits. Don't duplicate information already available via pointers.
-
-**Implementer subagents** should be run in the background where possible for maximum concurrency.
+Start every subagent with a fresh context window. Communicate through pointers to the spec, tickets, and commits. Run implementers in parallel, merge serially.
 
 ## Steps
 
-1. Read the spec and tickets to understand the task graph.
+1. Preflight. Record the base SHA (the main checkout's HEAD unless the user names another), plus its branch and status. Require a clean tracked tree, `.agents/worktree/` ignored, `.agents/notes/` not ignored, and test and lint excluding `.agents/worktree/**`. Done when the main checkout is safe to leave untouched.
 
-2. (optional) Use an **exploration subagent** to conduct any exploration required by the tickets - relevant codebase files or external documentation. Ensure the exploration subagent can save files - it should save its markdown notes in a directory outside the repo, accessible by all future subagents. This lets **implementer subagents** focus on implementation rather than exploration.
+2. Create the integration worktree from the base SHA using `docs/agents/worktree.md`. Open a draft PR after the first merge when the tracker uses PRs.
 
-3. Create the integration branch. If the issue tracker closes work through PRs, or the user asks for one, open a draft PR after the first merge in step 5 (a branch with no commits ahead of main can't open one), marked as closing the spec and tickets.
+3. Start every frontier ticket in its own worktree, created from the integration tip. Give each implementer the spec, ticket, worktree path, and ticket check command. Each implementer calls `tdd`, runs the ticket check, merges the integration tip, commits, and reports its decisions, rejected alternatives, evidence, and whether a final note is warranted. Done when every frontier ticket has a running implementer.
 
-4. Use a fresh **implementer subagent** for each ticket, each in its own worktree on its own branch. Each implementer subagent:
-   - confirms its worktree is based on the integration branch before starting, and resets onto it if not;
-   - calls the Skill tool with `tdd` to build the ticket;
-   - merges the integration branch tip into its own branch before reporting done
+4. Merge one ticket at a time with a single merger in the integration worktree. Run the integration check after each merge, and follow the conflict and rollback rules in `docs/agents/worktree.md`. Stop on conflict or failed checks.
 
-5. Once an **implementer subagent** completes, merge its work to the integration branch with a **merger subagent**.
+5. Reread the tracker after each merge. Start newly unblocked tickets. Done when no open ticket remains.
 
-6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
+6. Call `code-review` in the integration worktree with the base SHA as the fixed point. If it reports findings, fix them in the review worktree described by `docs/agents/worktree.md`, then merge that branch with the same serial rules.
 
-7. Once all tickets are complete, call the Skill tool with `code-review` on the integration branch. Fix all issues raised by the code review in a single fresh **implementer subagent**.
+7. Run a fresh historian after review fixes. It reads the spec, tickets, implementer reports, review report, fix diff, and `git diff <base-sha>...HEAD`; it writes one note per real decision, verifies the notes, and commits them to integration. If no note is needed, record the reason for step 8.
 
-8. If a draft PR exists, mark it ready for review. Otherwise, resolve each ticket the way the issue tracker closes work, and report the integration branch.
+8. If a draft PR exists, add `## Agent notes` to the PR body with the note paths, or `None.` with the reason, and mark it ready. Otherwise close every ticket the tracker's way and report the integration branch. Clean up with the rules in `docs/agents/worktree.md`.
 
-9. Clean up all **implementer subagent** worktrees.
+9. Compare the main checkout's HEAD, branch, and status with step 1. Done when they match and ticket and review worktrees are gone.
