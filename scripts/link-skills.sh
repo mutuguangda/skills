@@ -16,6 +16,22 @@ fi
 
 mkdir -p "$DEST"
 
+duplicates="$(find "$REPO/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -exec dirname {} \; | xargs -n1 basename | sort | uniq -d)"
+if [ -n "$duplicates" ]; then
+  echo "error: duplicate skill names: $duplicates" >&2
+  exit 1
+fi
+
+for link in "$DEST"/*; do
+  [ -L "$link" ] || continue
+  target="$(readlink "$link")"
+  case "$target" in
+    "$REPO"/*)
+      [ -e "$link" ] || rm "$link"
+      ;;
+  esac
+done
+
 while IFS= read -r -d '' skill_md; do
   src="$(dirname "$skill_md")"
   name="$(basename "$src")"
@@ -27,4 +43,4 @@ while IFS= read -r -d '' skill_md; do
 
   ln -sfn "$src" "$target"
   echo "linked $name -> $src"
-done < <(find "$REPO/skills" -name SKILL.md -not -path '*/deprecated/*' -not -path '*/misc/*' -print0)
+done < <(find "$REPO/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -print0)
